@@ -173,6 +173,13 @@ in {
       description = "Extra command names to allow in autonomy.allowed_commands (merged with zeroclaw defaults).";
     };
 
+    extraEnvironment = lib.mkOption {
+      type = lib.types.attrsOf lib.types.str;
+      default = {};
+      description = "Extra environment variables for the systemd service.";
+      example = { UV_PYTHON_PREFERENCE = "only-system"; };
+    };
+
     telegram = {
       enable = lib.mkOption {
         type = lib.types.bool;
@@ -240,6 +247,7 @@ in {
       wants = [ "network-online.target" ];
 
       path = cfg.extraPackages;
+      environment = cfg.extraEnvironment;
 
       serviceConfig = {
         Type = "simple";
