@@ -205,7 +205,7 @@ in {
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
 
-      path = [ pkgs.git ];
+      path = [ pkgs.git pkgs.uv pkgs.python3 ];
 
       serviceConfig = {
         Type = "simple";
