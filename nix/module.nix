@@ -19,19 +19,13 @@ let
   cfg = config.services.zeroclaw;
 
   # Build config.toml content.
+  # Only required field is default_temperature. Everything else is Optional or #[serde(default)].
+  # workspace_dir and config_path are #[serde(skip)] — set via ZEROCLAW_WORKSPACE env var instead.
   # Secrets use placeholders replaced at runtime by the wrapper script.
-  telegramSection = lib.optionalString cfg.telegram.enable ''
-
-    [channels_config.telegram]
-    bot_token = "@TELEGRAM_BOT_TOKEN@"
-    allowed_users = [${lib.concatMapStringsSep ", " (u: ''"${u}"'') cfg.telegram.allowedUsers}]
-    mention_only = ${lib.boolToString cfg.telegram.mentionOnly}
-  '';
-
   configToml = ''
-    workspace_dir = "${cfg.stateDir}/workspace"
     default_provider = "${cfg.provider}"
     default_model = "${cfg.model}"
+    default_temperature = 0.7
 
     [gateway]
     port = ${toString cfg.gatewayPort}
@@ -41,7 +35,12 @@ let
 
     [channels_config]
     cli = false
-    ${telegramSection}
+  '' + lib.optionalString cfg.telegram.enable ''
+
+    [channels_config.telegram]
+    bot_token = "@TELEGRAM_BOT_TOKEN@"
+    allowed_users = [${lib.concatMapStringsSep ", " (u: ''"${u}"'') cfg.telegram.allowedUsers}]
+    mention_only = ${lib.boolToString cfg.telegram.mentionOnly}
   '';
 
   configFile = pkgs.writeText "zeroclaw-config.toml" configToml;
