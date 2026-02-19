@@ -18,6 +18,30 @@
 let
   cfg = config.services.zeroclaw;
 
+  # Packages included when enableDefaultTools is true.
+  # These complement the implicit NixOS systemd deps (coreutils, findutils, gnugrep, gnused).
+  defaultToolPackages = with pkgs; [
+    git gawk bash curl wget jq
+    gnutar gzip zip unzip
+    diffutils file which tree patch
+  ];
+
+  defaultToolCommands = [
+    "git" "awk" "bash" "sh" "curl" "wget" "jq"
+    "tar" "gzip" "gunzip" "zip" "unzip"
+    "diff" "file" "which" "tree" "patch"
+  ];
+
+  # All packages on the service PATH
+  allPackages =
+    (lib.optionals cfg.enableDefaultTools defaultToolPackages) ++ cfg.extraPackages;
+
+  # All allowed commands for the [autonomy] section
+  allExtraCommands =
+    (lib.optionals cfg.enableDefaultTools defaultToolCommands) ++ cfg.extraAllowedCommands;
+
+  toTomlList = xs: "[${lib.concatMapStringsSep ", " (c: ''"${c}"'') xs}]";
+
   # Build config.toml content.
   # Only required field is default_temperature. Everything else is Optional or #[serde(default)].
   # workspace_dir and config_path are #[serde(skip)] — set via ZEROCLAW_WORKSPACE env var instead.
@@ -35,12 +59,11 @@ let
 
     [channels_config]
     cli = ${lib.boolToString cfg.enableCli}
-  '' + lib.optionalString (cfg.extraAllowedCommands != []) (
+  '' + lib.optionalString (allExtraCommands != []) (
     let
       # Merge with zeroclaw's built-in defaults so we extend rather than replace.
       defaultCmds = [ "git" "npm" "cargo" "ls" "cat" "grep" "find" "echo" "pwd" "wc" "head" "tail" ];
-      allCmds = lib.unique (defaultCmds ++ cfg.extraAllowedCommands);
-      toTomlList = xs: "[${lib.concatMapStringsSep ", " (c: ''"${c}"'') xs}]";
+      allCmds = lib.unique (defaultCmds ++ allExtraCommands);
       defaultPaths = [ "/etc" "/root" "/home" "/usr" "/bin" "/sbin" "/lib" "/opt" "/boot" "/dev" "/proc" "/sys" "/var" "/tmp" "~/.ssh" "~/.gnupg" "~/.aws" "~/.config" ];
     in ''
 
@@ -161,10 +184,20 @@ in {
       description = "Enable the interactive CLI channel.";
     };
 
+    enableDefaultTools = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = ''
+        Include common Linux tools (git, curl, jq, tar, bash, etc.) on the
+        service PATH and in allowed_commands.  These complement the implicit
+        NixOS systemd deps (coreutils, findutils, gnugrep, gnused).
+      '';
+    };
+
     extraPackages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
-      default = [ pkgs.git ];
-      description = "Packages added to the service PATH.";
+      default = [];
+      description = "Additional packages added to the service PATH (on top of default tools).";
     };
 
     extraAllowedCommands = lib.mkOption {
@@ -246,7 +279,7 @@ in {
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
 
-      path = cfg.extraPackages;
+      path = allPackages;
       environment = cfg.extraEnvironment;
 
       serviceConfig = {
