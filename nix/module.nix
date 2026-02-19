@@ -135,8 +135,8 @@ in {
 
     gatewayHost = lib.mkOption {
       type = lib.types.str;
-      default = "127.0.0.1:3000";
-      description = "Gateway bind address.";
+      default = "127.0.0.1";
+      description = "Gateway bind address (host only, port is set separately via gatewayPort).";
     };
 
     telegram = {
