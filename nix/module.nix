@@ -44,6 +44,7 @@ let
     in ''
 
     [autonomy]
+    level = "supervised"
     allowed_commands = ${tomlList}
   '') + lib.optionalString cfg.telegram.enable ''
 
