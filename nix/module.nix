@@ -34,7 +34,7 @@ let
     allow_public_bind = false
 
     [channels_config]
-    cli = false
+    cli = ${lib.boolToString cfg.enableCli}
   '' + lib.optionalString (cfg.extraAllowedCommands != []) (
     let
       # Merge with zeroclaw's built-in defaults so we extend rather than replace.
@@ -153,6 +153,12 @@ in {
       type = lib.types.str;
       default = "127.0.0.1";
       description = "Gateway bind address (host only, port is set separately via gatewayPort).";
+    };
+
+    enableCli = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Enable the interactive CLI channel.";
     };
 
     extraPackages = lib.mkOption {
