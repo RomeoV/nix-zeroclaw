@@ -38,6 +38,9 @@ let
     host = "${cfg.gatewayHost}"
     require_pairing = false
     allow_public_bind = false
+
+    [channels_config]
+    cli = false
     ${telegramSection}
   '';
 
