@@ -71,6 +71,7 @@ let
     level = "${cfg.autonomyLevel}"
     workspace_only = ${lib.boolToString cfg.workspaceOnly}
     block_high_risk_commands = ${lib.boolToString cfg.blockHighRiskCommands}
+    enforce_command_allowlist = ${lib.boolToString cfg.enforceCommandAllowlist}
     allowed_commands = ${toTomlList allCmds}
     forbidden_paths = ${toTomlList defaultPaths}
     max_actions_per_hour = ${toString cfg.maxActionsPerHour}
@@ -233,6 +234,16 @@ in {
       description = ''
         Block high-risk shell commands (curl, wget, ssh, etc.) even if allowlisted.
         Disable when the systemd sandbox already provides sufficient isolation.
+      '';
+    };
+
+    enforceCommandAllowlist = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = ''
+        Enforce the command allowlist in is_command_allowed().
+        When false, any command is permitted (relying on the systemd sandbox
+        for isolation). Injection/subshell/redirect checks still apply.
       '';
     };
 
