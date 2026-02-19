@@ -73,7 +73,7 @@ let
     block_high_risk_commands = ${lib.boolToString cfg.blockHighRiskCommands}
     allowed_commands = ${toTomlList allCmds}
     forbidden_paths = ${toTomlList defaultPaths}
-    max_actions_per_hour = 20
+    max_actions_per_hour = ${toString cfg.maxActionsPerHour}
     max_cost_per_day_cents = 500
   '') + lib.optionalString cfg.telegram.enable ''
 
@@ -234,6 +234,12 @@ in {
         Block high-risk shell commands (curl, wget, ssh, etc.) even if allowlisted.
         Disable when the systemd sandbox already provides sufficient isolation.
       '';
+    };
+
+    maxActionsPerHour = lib.mkOption {
+      type = lib.types.int;
+      default = 100;
+      description = "Maximum tool invocations per hour before rate-limiting.";
     };
 
     extraEnvironment = lib.mkOption {
