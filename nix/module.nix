@@ -38,14 +38,19 @@ let
   '' + lib.optionalString (cfg.extraAllowedCommands != []) (
     let
       # Merge with zeroclaw's built-in defaults so we extend rather than replace.
-      defaults = [ "git" "npm" "cargo" "ls" "cat" "grep" "find" "echo" "pwd" "wc" "head" "tail" ];
-      all = lib.unique (defaults ++ cfg.extraAllowedCommands);
-      tomlList = "[${lib.concatMapStringsSep ", " (c: ''"${c}"'') all}]";
+      defaultCmds = [ "git" "npm" "cargo" "ls" "cat" "grep" "find" "echo" "pwd" "wc" "head" "tail" ];
+      allCmds = lib.unique (defaultCmds ++ cfg.extraAllowedCommands);
+      toTomlList = xs: "[${lib.concatMapStringsSep ", " (c: ''"${c}"'') xs}]";
+      defaultPaths = [ "/etc" "/root" "/home" "/usr" "/bin" "/sbin" "/lib" "/opt" "/boot" "/dev" "/proc" "/sys" "/var" "/tmp" "~/.ssh" "~/.gnupg" "~/.aws" "~/.config" ];
     in ''
 
     [autonomy]
     level = "supervised"
-    allowed_commands = ${tomlList}
+    workspace_only = true
+    allowed_commands = ${toTomlList allCmds}
+    forbidden_paths = ${toTomlList defaultPaths}
+    max_actions_per_hour = 20
+    max_cost_per_day_cents = 500
   '') + lib.optionalString cfg.telegram.enable ''
 
     [channels_config.telegram]
