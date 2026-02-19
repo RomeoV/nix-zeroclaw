@@ -69,7 +69,7 @@ let
 
     [autonomy]
     level = "${cfg.autonomyLevel}"
-    workspace_only = true
+    workspace_only = ${lib.boolToString cfg.workspaceOnly}
     block_high_risk_commands = ${lib.boolToString cfg.blockHighRiskCommands}
     allowed_commands = ${toTomlList allCmds}
     forbidden_paths = ${toTomlList defaultPaths}
@@ -214,6 +214,16 @@ in {
         Autonomy level for shell command execution.
         "readonly" blocks all commands, "supervised" requires approval for
         medium/high-risk commands, "full" allows all allowlisted commands.
+      '';
+    };
+
+    workspaceOnly = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = ''
+        Restrict file_read/file_write tools to the workspace directory.
+        Disable when systemd sandboxing (ProtectSystem, ProtectHome) already
+        provides sufficient filesystem isolation.
       '';
     };
 
