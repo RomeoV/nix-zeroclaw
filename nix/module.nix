@@ -35,7 +35,17 @@ let
 
     [channels_config]
     cli = false
-  '' + lib.optionalString cfg.telegram.enable ''
+  '' + lib.optionalString (cfg.extraAllowedCommands != []) (
+    let
+      # Merge with zeroclaw's built-in defaults so we extend rather than replace.
+      defaults = [ "git" "npm" "cargo" "ls" "cat" "grep" "find" "echo" "pwd" "wc" "head" "tail" ];
+      all = lib.unique (defaults ++ cfg.extraAllowedCommands);
+      tomlList = "[${lib.concatMapStringsSep ", " (c: ''"${c}"'') all}]";
+    in ''
+
+    [autonomy]
+    allowed_commands = ${tomlList}
+  '') + lib.optionalString cfg.telegram.enable ''
 
     [channels_config.telegram]
     bot_token = "@TELEGRAM_BOT_TOKEN@"
@@ -139,6 +149,18 @@ in {
       description = "Gateway bind address (host only, port is set separately via gatewayPort).";
     };
 
+    extraPackages = lib.mkOption {
+      type = lib.types.listOf lib.types.package;
+      default = [ pkgs.git ];
+      description = "Packages added to the service PATH.";
+    };
+
+    extraAllowedCommands = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [];
+      description = "Extra command names to allow in autonomy.allowed_commands (merged with zeroclaw defaults).";
+    };
+
     telegram = {
       enable = lib.mkOption {
         type = lib.types.bool;
@@ -205,7 +227,7 @@ in {
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
 
-      path = [ pkgs.git pkgs.uv pkgs.python3 ];
+      path = cfg.extraPackages;
 
       serviceConfig = {
         Type = "simple";
