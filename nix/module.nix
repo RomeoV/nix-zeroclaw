@@ -70,6 +70,7 @@ let
     [autonomy]
     level = "supervised"
     workspace_only = true
+    block_high_risk_commands = ${lib.boolToString cfg.blockHighRiskCommands}
     allowed_commands = ${toTomlList allCmds}
     forbidden_paths = ${toTomlList defaultPaths}
     max_actions_per_hour = 20
@@ -206,11 +207,40 @@ in {
       description = "Extra command names to allow in autonomy.allowed_commands (merged with zeroclaw defaults).";
     };
 
+    blockHighRiskCommands = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = ''
+        Block high-risk shell commands (curl, wget, ssh, etc.) even if allowlisted.
+        Disable when the systemd sandbox already provides sufficient isolation.
+      '';
+    };
+
     extraEnvironment = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;
       default = {};
       description = "Extra environment variables for the systemd service.";
       example = { UV_PYTHON_PREFERENCE = "only-system"; };
+    };
+
+    memoryMax = lib.mkOption {
+      type = lib.types.str;
+      default = "2G";
+      description = "Maximum memory (systemd MemoryMax). Kills the service on breach.";
+      example = "4G";
+    };
+
+    cpuQuota = lib.mkOption {
+      type = lib.types.str;
+      default = "100%";
+      description = "CPU quota (systemd CPUQuota). 100% = 1 core, 200% = 2 cores.";
+      example = "200%";
+    };
+
+    tasksMax = lib.mkOption {
+      type = lib.types.int;
+      default = 64;
+      description = "Maximum number of tasks/threads (systemd TasksMax).";
     };
 
     telegram = {
@@ -330,6 +360,11 @@ in {
 
         # Namespaces
         RestrictNamespaces = true;
+
+        # Resource limits
+        MemoryMax = cfg.memoryMax;
+        CPUQuota = cfg.cpuQuota;
+        TasksMax = cfg.tasksMax;
 
         # File creation mask
         UMask = "0027";
