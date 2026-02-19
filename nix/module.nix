@@ -68,7 +68,7 @@ let
     in ''
 
     [autonomy]
-    level = "supervised"
+    level = "${cfg.autonomyLevel}"
     workspace_only = true
     block_high_risk_commands = ${lib.boolToString cfg.blockHighRiskCommands}
     allowed_commands = ${toTomlList allCmds}
@@ -205,6 +205,16 @@ in {
       type = lib.types.listOf lib.types.str;
       default = [];
       description = "Extra command names to allow in autonomy.allowed_commands (merged with zeroclaw defaults).";
+    };
+
+    autonomyLevel = lib.mkOption {
+      type = lib.types.enum [ "readonly" "supervised" "full" ];
+      default = "supervised";
+      description = ''
+        Autonomy level for shell command execution.
+        "readonly" blocks all commands, "supervised" requires approval for
+        medium/high-risk commands, "full" allows all allowlisted commands.
+      '';
     };
 
     blockHighRiskCommands = lib.mkOption {
