@@ -205,6 +205,8 @@ in {
       after = [ "network-online.target" ];
       wants = [ "network-online.target" ];
 
+      path = [ pkgs.git ];
+
       serviceConfig = {
         Type = "simple";
         User = cfg.user;
