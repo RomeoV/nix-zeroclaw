@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     zeroclaw-src = {
-      url = "github:RomeoV/zeroclaw/bec1dc7b8c276af474c1366915a764c43912e2a9";
+      url = "github:RomeoV/zeroclaw/a4356f4fba31a9a243a0ed94e3e17469fac808aa";
       flake = false;
     };
   };
